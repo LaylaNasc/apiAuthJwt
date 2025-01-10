@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Services\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ClienteController extends Controller
 {
@@ -54,19 +55,19 @@ class ClienteController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //validação  
+        // Validação dos dados
         $request->validate([
-            'nome' => 'sometimes|required',
-            'email' => 'sometimes|required|email|unique:clientes,email,' . $id,
-            'telefone' => 'sometimes|required'
+            'nome' => 'required|string',
+            'email' => 'required|email',
+            'telefone' => 'required|numeric'
         ]);
-    
-        // Alterando os dados
-        $cliente = Cliente::find($id);
-        if ($cliente) {
-            $cliente->update($request->only(['nome', 'email', 'telefone'])); // Atualiza apenas os campos fornecidos
-            return ApiResponse::success($cliente);
-        } else {
+
+        try {
+            $cliente = Cliente::findOrFail($id); 
+            
+            $cliente->update($request->only(['nome', 'email', 'telefone']));
+                return ApiResponse::success($cliente);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return ApiResponse::error('Cliente não encontrado!');
         }
     }
